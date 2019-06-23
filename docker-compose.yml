@@ -1,0 +1,52 @@
+version: '3.5'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - plainly
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - plainly
+
+  node:
+    container_name: plainly-api
+    build:
+      dockerfile: Dockerfile
+      context: .
+    volumes:
+      - '.:/usr/src/app'
+      - '/usr/src/app/node_modules'
+    ports:
+      - '3000:3000'
+      - '4000:4000'
+    environment:
+      - NODE_ENV=development
+    command: npm run pm2
+    environment:
+      NODE_ENV: development
+      SSL: 'false'
+      URL: '127.1.0.0'
+      PORT: 4000
+    networks:
+      - plainly
+    depends_on:
+      - db
+
+volumes:
+  db-data:
+    driver: local
+
+networks:
+  plainly:
+    driver: bridge
